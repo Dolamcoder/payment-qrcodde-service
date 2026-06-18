@@ -23,12 +23,15 @@ const generateQrcode=async(req, res)=>{
         res.status(500).json({ error: error.message });
     }
 }
-const vertifyQrcode = async (req, res) => {
+const verifyQrcode = async (req, res) => {
     try {
         const { billId, endTime, count, signature } = req.body;
-        console.log("data",  billId, endTime, count, signature );
-        const expectedSignature = signatureService.generateSignature(billId, endTime);
-        console.log("exx",expectedSignature );
+
+        const expectedSignature = signatureService.generateSignature(
+            billId,
+            endTime
+        );
+
         if (expectedSignature !== signature) {
             return res.status(400).json({
                 valid: false,
@@ -36,23 +39,36 @@ const vertifyQrcode = async (req, res) => {
             });
         }
 
-        if (Date.now() >= endTime) {
+        const now = Date.now();
+        const threeHour = 3*60 * 60 * 1000;
+
+        // Vé đã hết hạn
+        if (now >= endTime) {
             return res.status(400).json({
                 valid: false,
                 message: "Vé đã hết hạn",
             });
         }
 
+        // Chỉ được quét trong vòng 1 giờ trước khi phim kết thúc
+        if (endTime - now > threeHour) {
+            return res.status(200).json({
+                valid: true,
+                message: "Chưa đến thời gian sử dụng vé",
+                count
+            });
+        }
+
         return res.status(200).json({
             valid: true,
             message: "QR hợp lệ",
-            count: count
+            count,
         });
 
     } catch (error) {
         res.status(500).json({
-            error: error.message
+            error: error.message,
         });
     }
 };
-module.exports={generateQrcode, vertifyQrcode}
+module.exports={generateQrcode, verifyQrcode}
