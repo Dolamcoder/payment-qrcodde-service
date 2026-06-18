@@ -7,10 +7,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", require("./src/router/paymenRouter"));
-app.use("/api", require('./src/router/qrRoute'))
+app.use("/api", require("./src/router/qrRoute"));
 app.get("/", (req, res) => {
   res.send("Hello from Node.js server!");
 });
+app.use("/api", require("./src/router/chatRouter"));
 const port = 3000;
 connectDB();
 app.use("/api/users", require("./src/router/userRoute"));
